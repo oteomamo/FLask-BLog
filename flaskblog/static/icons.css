@@ -1,0 +1,21 @@
+.interaction-icons {
+    display: flex;
+    align-items: center;
+}
+
+.like-icon i,
+.dislike-icon i {
+    margin-right: 8px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.like-icon i:hover {
+    color: #595f39;
+    content: '\f164'; /* Solid thumbs-up icon */
+}
+
+.dislike-icon i:hover {
+    color: #595f39;
+    content: '\f165'; /* Solid thumbs-down icon */
+}

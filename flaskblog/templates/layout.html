@@ -1,0 +1,179 @@
+layout.html:
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='icons.css') }}">
+
+    {% if title %}
+    {% else %}
+        <title>Flask Blog</title>
+    {% endif %}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.0/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<style>
+  .news-box {
+      border: 1px solid #C4C5BA; 
+      padding: 15px;
+      margin-bottom: 20px;
+      max-height: 400px; 
+      overflow-y: auto; 
+  }
+</style>
+
+<script>
+var isUserLoggedIn = {{ session.get('user')|tojson|safe }};
+</script>
+
+<script>
+function updateLike(itemId, action, element) {
+    var $element = $(element);
+    if ($element.data('processing')) return; 
+    $element.data('processing', true);
+
+    $.ajax({
+        url: '/update_interaction',
+        type: 'POST',
+        data: JSON.stringify({ 'id': itemId, 'action': action }),
+        contentType: 'application/json;charset=UTF-8',
+        success: function(response) {
+            console.log("AJAX call successful. Response:", response);
+
+            // Update the like button state and count
+            var likeButton = $('#like-button-' + itemId);
+            var dislikeButton = $('#dislike-button-' + itemId);
+            var likeIcon = $('#like-icon-' + itemId);
+            var dislikeIcon = $('#dislike-icon-' + itemId);
+            
+            if (action === 'like') {
+                likeIcon.removeClass('fa-regular').addClass('fa-solid').css('color', '#595f39');
+                dislikeIcon.removeClass('fa-solid').addClass('fa-regular').css('color', '#1b1b1b');
+            } else {
+                dislikeIcon.removeClass('fa-regular').addClass('fa-solid').css('color', '#595f39');
+                likeIcon.removeClass('fa-solid').addClass('fa-regular').css('color', '#1b1b1b');
+            }
+            
+            // Update counts
+            $('#like-count-' + itemId).text(response.new_like_count);
+            $('#dislike-count-' + itemId).text(response.new_dislike_count);
+
+            $element.data('processing', false); // Reset processing state after success
+        },
+        error: function(error) {
+            console.log("AJAX call error:", error);
+            if (error.status === 401) {
+                // If unauthorized, prompt user to log in
+                alert("Please log in to interact with posts.");
+                window.location.href = "{{ url_for('main.login') }}";
+            }
+            $element.data('processing', false); // Reset processing state after error
+        }
+    });
+}  </script>
+
+
+</head>
+<body>
+
+
+  <header class="site-header" >
+    <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+      <div class="container">
+        <a class="navbar-brand mr-4" href="/">Flask Blog</a>
+        <div class="collapse navbar-collapse" id="navbarToggle">
+          <div class="navbar-nav">
+            <a class="nav-item nav-link" href="{{ url_for('main.home') }}">Home</a>
+            <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>
+
+            <!-- Dropdown for logged in user -->
+            {% if session.get('user') %}
+              <div class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Logged in as: {{ session['user'].get('name', 'Default User') }}
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <button class="dropdown-item" data-toggle="modal" data-target="#newPostModal">New Post</button>
+                  <a class="dropdown-item" href="{{ url_for('main.settings') }}">Settings</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="{{ url_for('main.logout') }}">Logout</a>
+                </div>
+              </div>
+            {% else %}
+              <a class="nav-item nav-link" href="{{ url_for('main.login') }}">Login</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+    <main role="main" class="container">
+    <div class="row">
+      <div class="col-md-8">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+              {% block content %}{% endblock %}
+      </div>
+
+      <!-- <div class="col-md-4">
+
+        <div class="content-section">
+          <h3>Our Sidebar</h3>
+          <p class='text-muted'>You can put any information here you'd like.
+            <ul class="list-group">
+              <li class="list-group-item list-group-item-light">Latest Posts</li>
+              <li class="list-group-item list-group-item-light">Announcements</li>
+              <li class="list-group-item list-group-item-light">Calendars</li>
+              <li class="list-group-item list-group-item-light">etc</li>
+            </ul>
+          </p>
+        </div> -->
+      </div>
+    </div>
+  </main>
+</body>
+
+
+<!-- New Post Modal -->
+<div class="modal fade" id="newPostModal" tabindex="-1" role="dialog" aria-labelledby="newPostModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="newPostModalLabel">Create New Post</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+          </div>
+          <div class="modal-body">
+              <form action="{{ url_for('main.create_post') }}" method="post">
+                  <div class="form-group">
+                      <label for="title">Title</label>
+                      <input type="text" class="form-control" id="title" name="title" placeholder="Title" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="content">Content</label>
+                      <textarea class="form-control" id="content" name="content" placeholder="Content" required></textarea>
+                  </div>
+                  <input type="submit" class="btn btn-primary" value="Submit">
+              </form>
+          </div>
+      </div>
+  </div>
+</div>
+
+
+
+</html>

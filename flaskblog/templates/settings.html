@@ -1,0 +1,232 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <h2>User Settings</h2>
+    <div class="row">
+        <!-- User Info -->
+        <div class="col-md-8">
+            <div class="user-info">
+                <img src="{{ user.picture }}" alt="User Picture" class="mb-2">
+                <p><strong>Name:</strong> {{ user.name }}</p>
+                <p><strong>Nickname:</strong> {{ user.nickname }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Role:</strong> {{ user.role }}</p>
+                    </div>
+        </div>
+        
+        <!-- Switches and Buttons -->
+        <div class="col-md-4">
+            <button type="button" class="btn btn-primary mb-2" onclick="showEditModal()">Edit Profile</button>
+            
+            {% if user.role == 'Admin' %}
+                <div class="custom-control custom-switch mb-2">
+                    <input type="checkbox" class="custom-control-input" id="allPostsSwitch">
+                    <label class="custom-control-label" for="allPostsSwitch">All Posts</label>
+                </div>
+            {% endif %}
+            <div class="custom-control custom-switch mb-2">
+                <input type="checkbox" class="custom-control-input" id="myPostsSwitch">
+                <label class="custom-control-label" for="myPostsSwitch">My Posts</label>
+            </div>
+            <div class="custom-control custom-switch mb-2">
+                <input type="checkbox" class="custom-control-input" id="interactionsSwitch">
+                <label class="custom-control-label" for="interactionsSwitch">Interactions</label>
+            </div>
+        </div>
+
+    </div>    
+</div> 
+
+
+    <div class="modal fade" id="editProfileModal" tabindex="-1" role="dialog" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ url_for('main.update_profile') }}" method="post">
+                        <div class="form-group">
+                            <label for="name">New Name:</label>
+                            <input type="text" id="name" name="name" class="form-control" required value="{{ user.name }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="nickname">New Nickname:</label>
+                            <input type="text" id="nickname" name="nickname" class="form-control" required value="{{ user.nickname }}">
+                        </div>
+                        <input type="submit" value="Update Profile" class="btn btn-primary">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .compact-table th, .compact-table td {
+            font-size: 0.8em; /* Smaller font size */
+            padding: 5px; /* Smaller padding */
+        }
+        .compact-table th {
+            min-width: 100px; /* Adjust column width as needed */
+        }
+        .compact-table .btn {
+            padding: 3px 6px; /* Smaller button padding */
+            font-size: 0.7em; /* Smaller button font size */
+        }
+    </style>
+
+
+<!-- All Posts Section for Admin -->
+{% if user.role == 'Admin' %}
+<div class="table-responsive" id="allPostsSection" style="display: none;">
+    <h3>All Posts</h3>
+    <table class="table table-bordered compact-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>By</th>
+                <th>Title</th>
+                <th>Time</th>
+                <th>Likes</th>
+                <th>Dislikes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for post in all_posts %}
+            <tr>
+                <td>{{ post.id }}</td>
+                <td>{{ post.by }}</td>
+                <td>{{ post.title }}</td>
+                <td>{{ post.datetime }}</td>
+                <td>{{ post.likes }}</td>
+                <td>{{ post.dislikes }}</td>
+                <td>
+                    <button class="btn btn-danger" onclick="deletePost('{{ post.id }}', '{{ post.type }}')">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+    
+<!-- My Posts Section -->
+<div class="table-responsive" id="myPostsSection" style="display: none;">
+    <h3>My Posts</h3>
+        <table class="table table-bordered compact-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>By</th>
+                <th>Title</th>
+                <th>Time</th>
+                <th>Likes</th>
+                <th>Dislikes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for post in my_posts %}
+            <tr>
+                <td>{{ post.id }}</td>
+                <td>{{ post.by }}</td>
+                <td>{{ post.title }}</td>
+                <td>{{ post.time }}</td>
+                <td>{{ post.likes }}</td>
+                <td>{{ post.dislikes }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<div class="table-responsive mt-4" id="interactionsSection" style="display: none;">
+    <h3>My Interactions</h3>
+    <table class="table table-bordered compact-table">
+        <thead>
+            <tr>
+                <th>Post ID</th>
+                <th>Title</th>
+                <th>Interaction</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for interaction in user_interactions %}
+            <tr>
+                <td>{{ interaction.post_id }}</td>
+                <td>{{ interaction.title }}</td>
+                <td>{{ interaction.interaction }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+    <script>
+        function showEditModal() {
+            $('#editProfileModal').modal('show');
+        }
+    </script>
+        
+
+        <script>
+            function showAllPostsModal() {
+                $('#allPostsModal').modal('show');
+            }
+        
+            function showMyPostsModal() {
+                $('#myPostsModal').modal('show');
+            }
+        
+            function showInteractionsModal() {
+                $('#interactionsModal').modal('show');
+            }
+    </script>
+
+
+<script>
+    // Function to toggle the display of tables
+    function toggleDisplay(switchId, sectionId) {
+        var isChecked = document.getElementById(switchId).checked;
+        document.getElementById(sectionId).style.display = isChecked ? "block" : "none";
+    }
+
+    // Event listeners for switches
+    {% if user.role == 'Admin' %}
+        document.getElementById('allPostsSwitch').addEventListener('change', function() {
+            toggleDisplay('allPostsSwitch', 'allPostsSection');
+        });
+    {% endif %}
+    document.getElementById('myPostsSwitch').addEventListener('change', function() {
+        toggleDisplay('myPostsSwitch', 'myPostsSection');
+    });
+    document.getElementById('interactionsSwitch').addEventListener('change', function() {
+        toggleDisplay('interactionsSwitch', 'interactionsSection');
+    });
+</script>
+    
+
+<script>
+    function deletePost(postId, postType) {
+        if(confirm('Are you sure you want to delete this post?')) {
+            fetch("{{ url_for('main.delete_post') }}", {
+                method: 'POST',
+                body: JSON.stringify({ id: postId, type: postType }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+              .then(data => {
+                if(data.status === 'success') {
+                    alert('Post deleted successfully');
+                    location.reload(); // Reload the page to update the table
+                } else {
+                    alert('Error deleting post');
+                }
+            });
+        }
+    }
+</script>
+    {% endblock %}

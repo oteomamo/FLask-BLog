@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    {% for item in news %}
+    <div class="news-box">
+        <h4>{{ item.title }}</h4>
+        <p><strong>Time:</strong> {{ item.datetime|datetimeformat }}</p>
+        {% if item.type == 'news' and item.text %}
+            <p>{{ item.text }}</p>
+        {% elif item.type == 'post' and item.text %}
+            <p>{{ item.text }}</p>
+        {% endif %}
+        
+    <div class="interaction-icons">
+        <!-- Like Button -->
+        <button class="btn btn-like" id="like-button-{{ item.id }}" onclick="updateLike('{{ item.id }}', 'like', this)">
+            <i id="like-icon-{{ item.id }}" class="{{ 'fa-solid' if item.user_liked else 'fa-regular' }} fa-thumbs-up fa-lg" style="color: {{ '#595f39' if item.user_liked else '#1b1b1b' }}"></i>
+            <span id="like-count-{{ item.id }}">{{ item.likes }}</span>
+        </button>
+
+        <!-- Dislike Button -->
+        <button class="btn btn-dislike" id="dislike-button-{{ item.id }}" onclick="updateLike('{{ item.id }}', 'dislike', this)">
+            <i id="dislike-icon-{{ item.id }}" class="{{ 'fa-solid' if item.user_disliked else 'fa-regular' }} fa-thumbs-down fa-lg" style="color: {{ '#595f39' if item.user_disliked else '#1b1b1b' }}"></i>
+            <span id="dislike-count-{{ item.id }}">{{ item.dislikes }}</span>
+        </button>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
